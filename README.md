@@ -1,2 +1,2 @@
 # terra-docs
-Terra documentation
+Test repository for terra documentation
