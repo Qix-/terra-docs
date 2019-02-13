@@ -25,6 +25,7 @@ Similar to the design of Lua, Terra can be used as a standalone executable/read-
 
 To run the REPL:
 
+
     $ ./terra
 
     Terra -- A low-level counterpart to Lua
@@ -51,32 +52,36 @@ You can also run it on already written files:
 Terra can also be used as a library from C by linking against `libterra.a` (windows:  `terra.dll`). The interface is very similar that of the [Lua interpreter](http://queue.acm.org/detail.cfm?id=1983083).
 A simple example initializes Terra and then runs code from the file specified in each argument:
 
-    //simple.cpp
-    #include <stdio.h>
-    #include "terra.h"
+```cpp
+//simple.cpp
+#include <stdio.h>
+#include "terra.h"
 
-    int main(int argc, char ** argv) {
-        lua_State * L = luaL_newstate(); //create a plain lua state
-        luaL_openlibs(L);                //initialize its libraries
-        //initialize the terra state in lua
-        terra_init(L);
-        for(int i = 1; i < argc; i++)
-        	//run the terra code in each file
-            if(terra_dofile(L,argv[i]))  
-                return 1; //error
-        return 0;
-    }
+int main(int argc, char ** argv) {
+    lua_State * L = luaL_newstate(); //create a plain lua state
+    luaL_openlibs(L);                //initialize its libraries
+    //initialize the terra state in lua
+    terra_init(L);
+    for(int i = 1; i < argc; i++)
+    	//run the terra code in each file
+        if(terra_dofile(L,argv[i]))  
+            return 1; //error
+    return 0;
+}
+```
 
 This program can then be compiled by linking against the Terra library
 
-    # Linux
-    c++ simple.cpp -o simple -I<path-to-terra-folder>/terra/include \
-    -L<path-to-terra-folder>/lib -lterra -ldl -pthread
+```bash
+# Linux
+c++ simple.cpp -o simple -I<path-to-terra-folder>/terra/include \
+-L<path-to-terra-folder>/lib -lterra -ldl -pthread
 
-    # OSX
-    c++ simple.cpp -o simple -I<path-to-terra-folder>/terra/include \
-    -L<path-to-terra-folder>/lib -lterra \
-    -pagezero_size 10000 -image_base 100000000
+# OSX
+c++ simple.cpp -o simple -I<path-to-terra-folder>/terra/include \
+-L<path-to-terra-folder>/lib -lterra \
+-pagezero_size 10000 -image_base 100000000
+```
 
 Note the extra `pagezero_size` and `image_base` arguments on OSX. These are necessary for LuaJIT to run on OSX.
 
@@ -88,8 +93,10 @@ A bunch of example scripts can be found in the `tests/` directory. The `run` scr
 
 Terra includes test suite to make sure all of its functionality is working. To run it:
 
-    cd tests
-    ../terra run
+```bash
+cd tests
+../terra run
+```
 
 Expect it to print a lot of junk out. At the end it will summarize the results:
 
@@ -125,11 +132,15 @@ The easiest way to get a working LLVM/Clang install is to download the _Clang Bi
 
 Now get the Terra sources:
 
-    git clone https://github.com/zdevito/terra
+```bash
+git clone https://github.com/zdevito/terra
+```
 
 To point the Terra build to the version of LLVM and Clang you downloaded, create a new file `Makefile.inc` in the `terra` source directory that points to your LLVM install by including the following contents:
 
-    LLVM_CONFIG = <path-to-llvm-install>/bin/llvm-config
+```makefile
+LLVM_CONFIG = <path-to-llvm-install>/bin/llvm-config
+```
 
 Now run make in the `terra` directory to download LuaJIT and build Terra:
 
@@ -137,11 +148,13 @@ Now run make in the `terra` directory to download LuaJIT and build Terra:
 
 If you do not create a `Makefile.inc`, the Makefile will look for the LLVM config script and Clang using these values:
 
-    LLVM_CONFIG ?= $(shell which llvm-config-3.5 llvm-config | head -1)
-    LLVM_PREFIX ?= $(shell $(LLVM_CONFIG) --prefix)
-    CLANG ?= $(shell which clang-3.5 clang | head -1)
-    CXX ?= $(CLANG)++
-    CC  ?= $(CLANG)
+```makefile
+LLVM_CONFIG ?= $(shell which llvm-config-3.5 llvm-config | head -1)
+LLVM_PREFIX ?= $(shell $(LLVM_CONFIG) --prefix)
+CLANG ?= $(shell which clang-3.5 clang | head -1)
+CXX ?= $(CLANG)++
+CC  ?= $(CLANG)
+```
 
 If your installation has these files in a different place, you can override these defaults in the `Makefile.inc` that you created in the `terra` directory.
 
@@ -150,23 +163,29 @@ Hello, World
 
 Hello world is simple:
 
-    print("hello, world")
+```terra
+print("hello, world")
+```
 
 This program is actually a completely valid Lua program as well. The top-level declarations in a Terra source code file are always run as normal Lua code! This top-level Lua layer handles the details like conditional compilation, namespaces, and templating of terra code. We'll see later that it additionally allows for more powerful meta-programming features such as function specialization, and multi-stage programming.
 
 To actually begin writing Terra code, we introduce a Terra function with the keyword `terra`:
 
-    terra addone(a : int)
-        return a + 1
-    end
+```terra
+terra addone(a : int)
+    return a + 1
+end
 
-    print(addone(2)) --this outputs: 3
+print(addone(2)) --this outputs: 3
+```
 
 Unlike Lua, arguments to Terra functions are explicitly typed. Terra uses a simple static type propagation to infer the return type of the `addone` function. You can also explicitly specify it:
 
-    terra addone(a : int) : int
-    	return a + 1
-    end
+```terra
+terra addone(a : int) : int
+    return a + 1
+end
+```
 
 The last line of the example invokes the Terra function from the top-level context. This is an example of the interaction between Terra and Lua.
 Terra code is JIT compiled to machine code when it is first _needed_. In this example, this occurs when `addone` is called. In general, functions are _needed_ when then are called, or when they are referred to by other functions that are being compiled.
@@ -175,13 +194,15 @@ More information on the interface between Terra and Lua can be found in [Lua-Ter
 
 We can also print "hello, world" directly from Terra code like so:
 
-    local C = terralib.includec("stdio.h")
+```terra
+local C = terralib.includec("stdio.h")
 
-    terra main()
-        C.printf("hello, world\n")
-    end
+terra main()
+    C.printf("hello, world\n")
+end
 
-    main()
+main()
+```
 
 The function `terralib.includec` is a Lua function that invokes Terra's backward compatibility layer to import C code in `stdio.h` into the Lua table `C`. Terra functions can then directly call the C functions. Since both clang (our C frontend) and Terra target the LLVM intermediate representation, there is no additional overhead in calling a C function. Terra can even inline across these calls if the source of the C function is available!
 
@@ -190,11 +211,13 @@ The `local` keyword is a Lua construct. It introduces a locally scoped Lua varia
 You can also compile code into a `.o`, or compile a stand-alone native executable.
 We can instruct the Terra compiler to save an object file or executable:
 
-    -- save a .o file you can link to normal C code:
-    terralib.saveobj("hello.o",{ main = main })
+```terra
+-- save a .o file you can link to normal C code:
+terralib.saveobj("hello.o",{ main = main })
 
-    -- save a native executable
-    terralib.saveobj("hello", { main = main })
+-- save a native executable
+terralib.saveobj("hello", { main = main })
+```
 
 The second argument is a table of functions to save in the object file and may include more than one function. The implementation of `saveobj` is still very primitive. For instance, it won't correctly save Terra functions that invoke Lua functions. This interface will become more robust over time.
 
@@ -203,63 +226,79 @@ Variables and Assignments
 
 Variables in Terra code are introduced with the `var` keyword:
 
-    terra myfn()
-        var a : int = 3
-        var b : double
-    end
+```terra
+terra myfn()
+    var a : int = 3
+    var b : double
+end
+```
 
 Unlike Lua, all Terra variables must be declared.  Initializers are optional. `b`'s value above is undefined until it is assigned. If an initializer is specified, then Terra can infer the variables type automatically:
 
-    terra myfn()
-        var a = 3.0 --a will have type double
-    end
+```terra
+terra myfn()
+    var a = 3.0 --a will have type double
+end
+```
 
 You can have multiple declarations on one line:
 
-    terra myfn()
-        var a : int, b : double = 3, 4.5
-        var c : double, d       = 3, 4.5
-    end
+```terra
+terra myfn()
+    var a : int, b : double = 3, 4.5
+    var c : double, d       = 3, 4.5
+end
+```
 
 Lua and Terra are both whitespace invariant. However, there is no need for semicolons between statements. The above statement is equivalent to:
 
-    terra myfn()
-        var a : int, b : double = 3, 4.5 var c : double, d = 3, 4.5
-    end
+```terra
+terra myfn()
+    var a : int, b : double = 3, 4.5 var c : double, d = 3, 4.5
+end
+```
 
 If you want to put a semicolon in for clarity you can:
 
-    terra myfn()
-        var a : int, b : double = 3, 4.5; var c : double, d = 3, 4.5
-    end
+```terra
+terra myfn()
+    var a : int, b : double = 3, 4.5; var c : double, d = 3, 4.5
+end
+```
 
 
 Assignments have a similar form:
 
-    terra myfn()
-        var a,b = 3.0, 4.5
-        a,b = b,a
-        -- a has value 4.5, b has value 3.0
-    end
+```terra
+terra myfn()
+    var a,b = 3.0, 4.5
+    a,b = b,a
+    -- a has value 4.5, b has value 3.0
+end
+```
 
 As in Lua, the right-hand side is executed before the assignments are performed, so the above example will swap the values of the two variables.
 
 Variables can be declared outside `terra` functions as well:
 
-    a = global(double,3.0)
-    terra myfn()
-        return a
-    end
+```terra
+a = global(double,3.0)
+terra myfn()
+    return a
+end
+```
 
 This makes `a` a _global_ variable that is visible to multiple Terra functions. The `global` function is part of Terra's Lua-based [API](api.html#global-variables). It initializes `a` to the _Lua_ value `3.0`.
 
 Variables in Terra are always lexically scoped. The statement `do <stmts> end` introduces a new level of scoping (for the remainder of this guide, the enclosing `terra` declaration will be omitted when it is clear we are talking about Terra code):
 
-    var a = 3.0
-    do
-        var a = 4.0
-    end
-    -- a has value 3.0 now
+```terra
+var a = 3.0
+do
+    var a = 4.0
+end
+-- a has value 3.0 now
+```
 
 Control Flow
 ============
@@ -268,39 +307,45 @@ Terra's control flow is almost identical to Lua except for the behavior of `for`
 
 ### If Statements ###
 
-    if a or b and not c then
-        C.printf("then\n")
-    elseif c then
-        C.printf("elseif\n")
-    else
-        C.printf("else\n")
-    end
+```terra
+if a or b and not c then
+    C.printf("then\n")
+elseif c then
+    C.printf("elseif\n")
+else
+    C.printf("else\n")
+end
+```
 
 ### Loops ###
 
-    var a = 0
-    while a < 10 do
-        C.printf("loop\n")
-        a = a + 1
-    end
+```terra
+var a = 0
+while a < 10 do
+    C.printf("loop\n")
+    a = a + 1
+end
 
-    repeat
-        a = a - 1
-        C.printf("loop2\n")
-    until a == 0
+repeat
+    a = a - 1
+    C.printf("loop2\n")
+until a == 0
 
-    while a < 10 do
-        if a == 8 then
-            break
-        end
-        a = a + 1
+while a < 10 do
+    if a == 8 then
+        break
     end
+    a = a + 1
+end
+```
 
 Terra also includes `for` loop. This example counts from 0 up to but not including 10:
 
-    for i = 0,10 do
-        C.printf("%d\n",i)
-    end
+```terra
+for i = 0,10 do
+    C.printf("%d\n",i)
+end
+```
 
 This is different from Lua's behavior (which is inclusive of 10) since Terra uses 0-based indexing and pointer arithmetic in contrast with Lua's 1-based indexing. Ideally, Lua and Terra would use the same indexing rules. However, Terra code needs to frequently do pointer arithmetic and interface with C code both of which are cumbersome with 1-based indexing. Alternatively, patching Lua to make it 0-based would make the flavor of Lua bundled with Terra incompatible with existing Lua code.
 
@@ -308,17 +353,21 @@ Lua also has a `for` loop that operates using iterators. This is not yet impleme
 
 The loop may also specify an option step parameter:
 
-    for i = 0,10,2 do
-        c.printf("%d\n",i) --0, 2, 4, ...
-    end
+```terra
+for i = 0,10,2 do
+    c.printf("%d\n",i) --0, 2, 4, ...
+end
+```
 
 ### Gotos ###
 
 Terra includes goto statements. Use them wisely. They are included since they can be useful when generating code for embedded languages.
 
-    ::loop::
-    C.printf("y\n")
-    goto loop
+```terra
+::loop::
+C.printf("y\n")
+goto loop
+```
 
 Functions
 =========
