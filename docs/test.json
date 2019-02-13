@@ -1,5 +1,5 @@
 {
 	"/": {"link": "/Overview"},
 	"/Overview": {"page": "Hello from overview!"},
-	"/Markdown": {"page": "# Title!\nThat was a **really cool** title.\n## Subtitle: The next chapter\nMore _really cool_ titles.\n\nHere's a cat: ![](https://imgur.com/gallery/OaZKMKP)"}
+	"/Markdown": {"page": "# Title!\nThat was a **really cool** title.\n## Subtitle: The next chapter\nMore _really cool_ titles.\n\nHere's a cat: ![](https://media2.giphy.com/media/tT0wtdSJvE0Rq/giphy.gif?cid=3640f6095c6419424d4a64434d572056)"}
 }
