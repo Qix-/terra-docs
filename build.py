@@ -12,6 +12,12 @@ for dirpath, dirs, files in os.walk(baseDir):
         filepath = os.path.join(dirpath, filename)
         pagepath = '/' + os.path.relpath(os.path.join(dirpath, basename), start='docs')
 
+        if pagepath.lower() == '/readme':
+            # We don't include the readme so that we can
+            # document the documentation system without it
+            # being included on the site.
+            continue
+
         if os.path.islink(filepath):
             if pagepath == '/Index':
                 # Special case; /Index just means /
