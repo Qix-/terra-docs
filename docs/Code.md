@@ -12,6 +12,7 @@ local foo = 10
 ```terra
 -- Some terra code
 local foo: int = 10
+local someString: &int8 = 'This is a string!'
 
 terra bar():int
     return foo -- yes I know this doesn't work
