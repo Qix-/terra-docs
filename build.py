@@ -19,6 +19,7 @@ for dirpath, dirs, files in os.walk(baseDir):
 
             linkpath = os.path.join(os.path.dirname(pagepath), os.readlink(filepath))
             linkpath = os.path.normpath(linkpath)
+            linkpath, _ = os.path.splitext(linkpath)
             result[pagepath] = {'link': linkpath}
         else:
             with open(filepath) as myfile:
