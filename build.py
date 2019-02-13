@@ -18,11 +18,11 @@ for dirpath, dirs, files in os.walk(baseDir):
             # being included on the site.
             continue
 
-        if os.path.islink(filepath):
-            if pagepath == '/Index':
-                # Special case; /Index just means /
-                pagepath = '/'
+        if pagepath == '/Index':
+            # Special case; /Index just means /
+            pagepath = '/'
 
+        if os.path.islink(filepath):
             linkpath = os.path.join(os.path.dirname(pagepath), os.readlink(filepath))
             linkpath = os.path.normpath(linkpath)
             linkpath, _ = os.path.splitext(linkpath)
