@@ -1,7 +1,7 @@
 import os
 import json
 
-baseDir = os.path.join(os.path.dirname(__file__), 'docs/')
+baseDir = os.path.join(os.getcwd(), 'docs/')
 result = dict()
 for dirpath, dirs, files in os.walk(baseDir):
     for filename in files:
