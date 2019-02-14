@@ -7,12 +7,20 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - 'a5:9b:8e:93:39:92:e9:62:97:e5:b5:10:da:ca:1d:fe'
-      - run: apk --update add git python openssh
+      - run:
+          command: apk --update add git python openssh
+          name: Download dependencies
       - checkout
-      - run: git worktree add ../docs
-      - run: cd ../docs && git fetch origin docs && git reset --hard origin/docs
-      # TODO do build
-      - run: cd ../docs && git push origin docs
+      - run:
+          command: git checkout -b docs && git fetch origin docs && git reset --hard origin/docs
+          name: Pull existing docs branch
+      - run:
+          command: python build.py > index.json
+          name: Build documentation index
+      - run:
+          command: 'git add -A && git commit -m "$(git log -1 --pretty=%B master)" && git push origin docs'
+          name: Deploy documentation
+
 workflows:
   version: 2
   build_and_deploy_docs:
