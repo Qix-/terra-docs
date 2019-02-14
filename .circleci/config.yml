@@ -21,7 +21,7 @@ jobs:
           command: python build.py > index.json
           name: Build documentation index
       - run:
-          command: 'git add -A && git commit -m "$(git log -1 --pretty=%B master)" && git push origin docs'
+          command: 'git add -A && git commit -m "$(git log -1 --pretty=%B master) [skip ci]" && git push origin docs'
           name: Deploy documentation
 
 workflows:
