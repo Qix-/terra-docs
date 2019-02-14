@@ -10,6 +10,9 @@ jobs:
       - run:
           command: apk --update add git python openssh
           name: Download dependencies
+      - run:
+          command: git config --global user.name 'Josh Junon' && git config --global user.email 'josh@junon.me'
+          name: Configure Git
       - checkout
       - run:
           command: git checkout -b docs && git fetch origin docs && git reset --hard origin/docs
