@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  deploy:
+    docker:
+      - image: alpine:3.9
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - 'a5:9b:8e:93:39:92:e9:62:97:e5:b5:10:da:ca:1d:fe'
+      - run: apk --update add git python openssh
+      - checkout
+      - run: git worktree add ../docs
+      - run: cd ../docs && git fetch origin docs && git reset --hard origin/docs
+      # TODO do build
+      - run: cd ../docs && git push origin docs
+workflows:
+  version: 2
+  build_and_deploy_docs:
+    jobs:
+      - deploy:
+          filters:
+            branches:
+              only:
+                - master
