@@ -15,13 +15,13 @@ jobs:
           name: Configure Git
       - checkout
       - run:
-          command: git checkout -b docs && git fetch origin docs && git reset --hard origin/docs
+          command: git worktree add ../docs && cd ../docs && git fetch origin docs && git reset --hard origin/docs
           name: Pull existing docs branch
       - run:
-          command: python build.py > index.json
+          command: python ../docs/build.py > ../docs/index.json
           name: Build documentation index
       - run:
-          command: 'git add -A && (git commit -m "$(git log -1 --pretty=%B master) [skip ci]" ||:) && git push origin docs'
+          command: 'cd ../docs && git add -A && (git commit -m "$(git log -1 --pretty=%B master) [skip ci]" ||:) && git push origin docs'
           name: Deploy documentation
 
 workflows:
